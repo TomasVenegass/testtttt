@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escaneo de Patente Chilena</title>
+</head>
+<body>
+    <h1>Escanear Patente del Automóvil</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capturar Foto</button>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <p id="output"></p>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
+    <script>
+        // Acceso a la cámara
+        const video = document.getElementById('video');
+
+        // Solicita acceso a la cámara del usuario
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error al acceder a la cámara: ", err);
+            });
+
+        // Captura la foto cuando se presiona el botón
+        const captureButton = document.getElementById('capture');
+        captureButton.addEventListener('click', () => {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Obtener la imagen capturada en formato Data URL
+            const image = canvas.toDataURL('image/png');
+
+            // Realizar OCR sobre la imagen usando Tesseract.js
+            Tesseract.recognize(
+                image,
+                'spa', // Usamos español para mejorar el reconocimiento
+                {
+                    logger: info => console.log(info) // Log opcional para ver el progreso
+                }
+            ).then(({ data: { text } }) => {
+                document.getElementById('output').innerText = "Patente Detectada: " + text;
+            }).catch(error => {
+                console.error("Error durante el escaneo OCR: ", error);
+            });
+        });
+    </script>
+</body>
+</html>
